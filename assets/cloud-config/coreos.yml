@@ -1,0 +1,58 @@
+#cloud-config
+coreos:
+  update:
+    group: stable
+    reboot-strategy: off
+
+  {{- template "etcd2" .}}
+
+  fleet:
+  {{ if index .host "mstr" }}
+    metadata: "role={{.host.md.role}},kube-master={{.host.md.mstr}},vlan={{.interface.subnet.vlan}},vlan-{{.interface.subnet.vlan}}=true{{if index .host "fleetadd"}}{{.host.fleetadd}}{{end}}"
+  {{ else }}
+    metadata: "role={{.host.md.role}},vlan={{.interface.subnet.vlan}},vlan-{{.interface.subnet.vlan}}=true{{if index .host "fleetadd"}}{{.host.fleetadd}}{{end}}"
+  {{ end }}
+
+  units:
+    - name: checkpoint.service
+      command: start
+      content: |
+        [Unit]
+        Description=CoreOS (Re)Provision
+        Author=Vaquero
+
+        [Service]
+        ExecStart=/usr/bin/curl {{ Checkpoint }}
+        Restart=on-failure
+        RestartSec=5s
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: etcd2.service
+      command: start
+    - name: fleet.service
+      command: start
+    - name: docker.service
+      drop-ins:
+        - name: 10-docker-opts.conf
+          content: |
+            [Service]
+            # Setting max log size to 10M
+            Environment="DOCKER_OPTS=--log-driver=json-file --log-opt max-size=10m"
+    - name: early-docker.service
+      drop-ins:
+        - name: 10-docker-opts.conf
+          content: |
+            [Service]
+            # Setting max log size to 10M
+            Environment="DOCKER_OPTS=--log-driver=json-file --log-opt max-size=10m"
+
+{{ if index .env.metadata "ssh_authorized_keys" }}
+ssh_authorized_keys:
+  {{ range $element := .env.metadata.ssh_authorized_keys }}
+  - {{ $element}}
+  {{ end }}
+{{ end }}
+users:
+  - name: core
+    passwd: {{ .boot.metadata.root_pass }}

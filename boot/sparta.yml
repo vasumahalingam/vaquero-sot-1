@@ -1,0 +1,9 @@
+---
+id: sparta
+name: spartaBootstrap
+
+operating_system: sparta-atomic
+
+unattended:
+  type: kickstart
+  use: sparta.ks
