@@ -1,4 +1,0 @@
-id: sparta
-do_once: true
-workflow:
-  - boot: sparta
