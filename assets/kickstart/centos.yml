@@ -37,7 +37,7 @@ clearpart --all --drives=sda --initlabel
 # Create the bootloader in the MBR with drive sda being the drive to install it on
 bootloader --location=mbr --driveorder=sda
 
-# Create a 100MB /boot partition
+# Let CentOS decide what it needs, disk wise
 autopart --type=lvm
 
 # Install the Base and Core software packages, plus OpenSSH server & client
@@ -48,3 +48,6 @@ autopart --type=lvm
 openssh-clients
 openssh-server
 %end
+
+# Don't require a keypress
+reboot
