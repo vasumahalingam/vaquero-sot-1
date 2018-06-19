@@ -42,5 +42,4 @@ echo "datasource_list: [ NoCloud, None ]"  >> /etc/cloud/cloud.cfg
 
 %end
 
-
 reboot
