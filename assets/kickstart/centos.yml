@@ -28,7 +28,7 @@ firewall --enabled --port=22:tcp
 authconfig --enableshadow --enablemd5
 
 #selinx config
-selinux --permissive
+selinux --enforced
 
 # Set the timezone
 timezone --utc UTC
