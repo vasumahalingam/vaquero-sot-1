@@ -1,0 +1,238 @@
+# Kickstart file for a basic install.
+install
+
+# Specifies the language
+lang en_US.UTF-8
+
+# Specifies the keyboard layout
+keyboard us
+
+# Skip Red Hat key input (disabled for Centos)
+# key --skip
+
+# Forces the text installer to be used (saves on time because a GUI doesn’t need to be loaded)
+text
+
+# Skips the display of any GUI during install
+skipx
+
+#Root password
+rootpw --disabled
+
+#Initial user
+user ubuntu --fullname "Ubuntu User"  --password cisco123
+
+
+# Enable the firewall and open port 22 for SSH remote administration
+firewall --enabled --port=22:tcp
+
+# Set the timezone
+
+timezone --utc UTC
+
+# Used with an HTTP install to specify where the install files are located
+url --url http://15.0.0.2/repo/ubuntu16
+
+network --bootproto=dhcp --device=enp94s0f0
+
+preseed --owner disk-detect disk-detect/iscsi/enable boolean false
+preseed --owner d-i partman-lvm/device_remove_lvm boolean true
+preseed --owner d-i partman-md/device_remove_md boolean true
+preseed --owner d-i partman-lvm/confirm boolean true
+preseed --owner d-i partman/choose_partition select finish
+preseed --owner d-i partman/confirm_write_new_label boolean true
+preseed --owner d-i partman/confirm boolean true
+preseed --owner d-i partman/confirm_nooverwrite boolean true
+preseed --owner d-i partman-md/confirm_nooverwrite boolean true
+preseed --owner d-i partman-lvm/confirm_nooverwrite boolean true
+
+# Disk partition
+
+
+#System bootloader configuration
+bootloader --location=mbr 
+
+#Clear the Master Boot Record
+zerombr yes
+
+#Partition clearing information
+clearpart --all --initlabel 
+
+#Basic disk partition
+part / --fstype ext4 --size 1 --grow --asprimary 
+part swap --size 1024 
+part /boot --fstype ext4 --size 256 --asprimary  
+
+
+
+# Repo and package setup
+
+repo --name repo1 --install --baseurl=http://15.0.0.2/repo/ubuntu16
+
+
+# Install the Base and Core software packages, plus OpenSSH server & client
+# This is the bare minimum for a system to run (with remote access via SSH)
+%packages
+@ ubuntu-server
+openssh-server
+ftp
+build-essential
+curl
+cloud-init
+bridge-utils
+
+%end
+
+
+# OS configuration
+
+
+
+%post --log=/root/kickstart_os.log
+
+
+cat <<EOF >/etc/sysctl.d/10-system.conf
+
+net.ipv4.conf.all.rp_filter=0
+
+net.ipv4.conf.default.rp_filter=0
+
+net.ipv6.conf.all.disable_ipv6=0
+
+EOF
+
+
+
+
+grubby --update-kernel=ALL --args=default_hugepagesz=2M
+
+grubby --update-kernel=ALL --args=elevator=cfq
+
+grubby --update-kernel=ALL --args=intel_iommu=true
+
+grubby --update-kernel=ALL --args=iommu=pt
+
+grubby --update-kernel=ALL --args=nmi_watchdog=0
+
+
+
+%end
+
+
+
+# Cloud-init-network configuration
+
+
+%post --log=/root/cloudinit.log
+
+# Disable cloud-init from listening to network for metadata
+echo "datasource_list: [ NoCloud, None ]"  >> /etc/cloud/cloud.cfg
+
+
+cat << EOF  > /etc/cloud/cloud.cfg.d/10-ssh-keys.cfg
+#cloud-config
+
+#SSH keys
+
+
+ssh_authorized_keys:
+  
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBtALKqExq49QYpfuy9EE9XWluMKac1DIiMkBMydS1YdNIPP1w9Urw9uLjuO/m99CNsXz29czs6Y6zoUpeTtGSIjWG5YQLecwPnXLO/v9NwTJdI2e3sSRJsU6hY9FK45if9rRBPAZiy1dMA5CiSgBrPtcEYSXkM7dRnqFFyvuQsuSG7Skb/9V6qXfhysKt1bnyNfYRigNzSxdL0fAcjDPpEfF3z0p5jSEhqAto/kZFOkHjxh2R1CeeYx9zs+AK/PqXl87qNN+NQ/78r2+u1qON0B1XMQvKh+95PO+MaZvhkH7MLrgY+RZThebEz1rDbs19PXLsOulGJwemVyMWzAtN root@a25-minnesota-5
+  
+
+
+EOF
+
+
+
+cat << EOF  > /etc/cloud/cloud.cfg.d/20-network-setting.cfg
+#cloud-config
+
+#Networking
+network:
+  version: 1
+  config:
+    - type: physical
+      name: samx1
+      mac_address: 3c:fd:fe:ab:64:42
+    - type: physical
+      name: samx2
+      mac_address: 3c:fd:fe:ab:64:43
+    - type: physical
+      name: pet1
+      mtu: 9000
+      mac_address: 3c:fd:fe:b0:8e:68
+    - type: physical
+      name: pet2
+      mtu: 9000
+      mac_address: 3c:fd:fe:b0:8e:69
+    - type: bond
+      name: samx
+      bond_interfaces:
+        -  samx1
+        -  samx2 
+      params:
+        bond-mode:  active-backup
+    - type: bond
+      name: pet
+      mtu: 9000
+      bond_interfaces:
+        -  pet1
+        -  pet2 
+      params:
+        bond-mode:  active-backup
+    - type: vlan
+      name: samx.mgmt
+      vlan_link: samx
+      vlan_id: 501 
+      subnets: 
+        - type: static
+          address: 26.0.0.28  
+          netmask: 255.255.255.0  
+          gateway: 26.0.0.1  
+          
+    - type: vlan
+      name: pet.external
+      mtu: 9000
+      vlan_link: pet
+      vlan_id: 601 
+      subnets: 
+        - type: static
+          address: 36.0.0.28  
+          netmask: 255.255.255.0  
+          gateway: 36.0.0.1  
+          
+    - type: vlan
+      name: pet.tenant
+      mtu: 9000
+      vlan_link: pet
+      vlan_id: 701 
+      subnets: 
+        - type: static
+          address: 46.0.0.28  
+          netmask: 255.255.255.0  
+          gateway: 46.0.0.1  
+          
+    - type: nameserver
+      address: [15.0.0.2]
+      search: [cisco.com]
+EOF
+
+cat << EOF  > /etc/cloud/cloud.cfg.d/30-network-bond2team.cfg
+#cloud-config
+
+#Networking
+#convert bonds to teams
+runcmd:
+ - [ sh, -c, 'bond2team --master pet --outputdir /etc/sysconfig/network-scripts ' ]
+ - [ sh, -c, 'hostnamectl set-hostname server1 ' ]
+ - [ sh, -c, 'systemctl restart network ' ]
+ - [ sh, -c, 'mkdir /root/cloud.cfg.d && mv /etc/cloud/cloud.cfg.d/* /root/cloud.cfg.d ' ]
+
+EOF
+
+%end
+
+
+
+reboot

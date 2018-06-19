@@ -1,0 +1,82 @@
+#cloud-config
+network:
+  version: 1
+  config:
+    {{- if index .host.metadata.network_config "interfaces" }}
+        {{- range $interface := .host.metadata.network_config.interfaces }}
+        - type: physical
+          name: {{ $interface.name }} 
+          {{- if index $interface "mtu" }}
+          mtu: {{ $interface.mtu }}
+          {{- end }}
+          {{- if index $interface.options "ip" }} 
+          subnets:
+            - type: static
+              address: {{ $interface.options.ip }}
+            {{- if index $interface.options "netmask" }} 
+              netmask: {{ $interface.options.netmask }}
+            {{- end }} 
+            {{- if index $interface.options "gateway" }} 
+              gateway: {{ $interface.options.gateway }}
+            {{- end }} 
+          {{- end }} 
+        {{- end }}
+    {{-  end }}
+
+    {{-  if index .host.metadata.network_config "bonds" }}
+        {{-  range $bond := .host.metadata.network_config.bonds }}
+        - type: bond
+          name: {{ $bond.name }} 
+          bond_interfaces: [ {{ $bond.devices }} ]
+          params:
+            bond-mode: 802.3ad
+            bond-lacp-rate: fast
+          {{- if index $bond "mtu" }}
+          mtu: {{ $bond.mtu }}
+          {{- end }}
+          {{- if index $bond.options "ip" }} 
+          subnets:
+            - type: static
+              address: {{ $bond.options.ip }}
+            {{- if index $bond.options "netmask" }} 
+              netmask: {{ $bond.options.netmask }}
+            {{- end }} 
+            {{- if index $bond.options "gateway" }} 
+              gateway: {{ $bond.options.gateway }}
+            {{- end }} 
+          {{- end }} 
+        {{-  end }}
+    {{-  end }}
+
+    {{-  if index .host.metadata.network_config "vlans" }}
+        {{-  range $vlan := .host.metadata.network_config.vlans }}
+        - type: vlan
+          name: {{ $vlan.name }} 
+          vlan_link: {{ $vlan.device }}
+          vlan_id: {{ $vlan.vlanid }}
+          {{- if index $vlan "mtu" }}
+          mtu: {{ $vlan.mtu }}
+          {{- end }}
+          {{- if index $vlan.options "ip" }}  
+          subnets:
+            - type: static
+              address: {{ $vlan.options.ip }}
+            {{- if index $vlan.options "netmask" }} 
+              netmask: {{ $vlan.options.netmask }}
+            {{- end }} 
+            {{- if index $vlan.options "gateway" }}
+              gateway: {{ $vlan.options.gateway }}
+            {{- end }}
+          {{- end }}
+        {{-  end }}
+    {{-  end }}
+
+{{ if index .env.metadata "ssh_authorized_keys" }}
+ssh_authorized_keys:
+  {{ range $element := .env.metadata.ssh_authorized_keys }}
+  - {{ $element}}
+  {{ end }}
+{{ end }}
+users:
+  - name: root
+    passwd: {{ .boot.metadata.root_pass }}

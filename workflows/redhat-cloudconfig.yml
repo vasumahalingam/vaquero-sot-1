@@ -1,0 +1,3 @@
+id:  redhat-cloudconfig
+workflow:
+  - boot:  redhat-cloudconfig

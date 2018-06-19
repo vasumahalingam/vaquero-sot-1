@@ -1,0 +1,22 @@
+#cloud-config
+packages:
+  - lldpad  
+write_files:
+  - path: /usr/local/bin/lldp.sh
+    owner: root:root
+    permissions: '0755'
+    content: |
+      for i in `ls /sys/class/net/ | grep 'eth\|ens\|eno'` ;
+          do echo "enabling lldp for interface: $i" ;
+          lldptool set-lldp -i $i adminStatus=rxtx  ;
+          lldptool -T -i $i -V  sysName enableTx=yes;
+          lldptool -T -i $i -V  portDesc enableTx=yes ;
+          lldptool -T -i $i -V  sysDesc enableTx=yes;
+          lldptool -T -i $i -V sysCap enableTx=yes;
+          lldptool -T -i $i -V mngAddr enableTx=yes;
+      done
+runcmd:
+   - systemctl start lldpad
+   - sh /usr/local/bin/llpd.sh > /var/tmp/lldp.log 
+   - lldpcli show neighbors  >  /var/tmp/lldp_neighbors.log 
+   - lldpcli show statistics  >  /var/tmp/lldp_statistics.log 
