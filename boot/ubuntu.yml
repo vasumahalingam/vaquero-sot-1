@@ -1,9 +1,0 @@
----
-id: ubuntu
-name: ubuntuInstall
-
-operating_system: ubuntu16-stable
-
-unattended:
-  type: kickseed
-  use: ubuntu.yml
