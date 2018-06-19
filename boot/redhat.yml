@@ -1,0 +1,9 @@
+---
+id: redhat
+name: redhatInstall
+
+operating_system: redhat7-stable
+
+unattended:
+  type: kickstart
+  use: redhat.yml

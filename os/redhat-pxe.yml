@@ -1,0 +1,11 @@
+---
+id: redhat7-stable
+name: Redhat7 Stable
+major_version: '7'
+minor_version: '4.0'
+os_family: RedHat 
+release_name: stable
+boot:
+  kernel: "{{.env.agentURL}}/files/redhat7.vmlinuz"
+  initrd:
+  - "{{.env.agentURL}}/files/redhat7_initrd.img"

@@ -1,0 +1,37 @@
+# Kickstart file for a basic install.
+install
+
+# Specifies the language
+lang en_US.UTF-8
+
+# Specifies the keyboard layout
+keyboard us
+
+# Skip Red Hat key input (disabled for Centos)
+# key --skip
+
+# Forces the text installer to be used (saves on time because a GUI doesn’t need to be loaded)
+text
+
+# Skips the display of any GUI during install
+skipx
+
+# Used with an HTTP install to specify where the install files are located
+url --url {{ .env.metadata.centos_baseurl }}
+
+# Repo and package setup
+{{ template "package.ks" . }}
+
+# Disk RAID device configuration
+{{ template "raid_disk.ks" . }}
+
+# Disk partition
+{{ template "partition.ks" . }}
+
+# OS configuration
+{{ template "os.ks" . }}
+
+# Cloud-init-network configuration
+{{ template "cloudinit.ks" . }}
+
+reboot
