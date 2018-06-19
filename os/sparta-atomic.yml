@@ -1,0 +1,17 @@
+---
+id: sparta-atomic
+name: Sparta RHEL Atomic 7.3.3
+major_version: '7'
+minor_version: '7.3.3'
+#os_family: RHEL
+# only CentOS is valid for kickstart unattended types
+os_family: CentOS
+release_name: stable
+boot:
+  kernel: "{{.env.agentURL}}/files/images/vmlinuz"
+  initrd:
+  - "{{.env.agentURL}}/files/images/initrd.img"
+cmdline:
+  - text: ''
+  - inst.repo: "{{.env.agentURL}}/files/atomic-install-repo"
+  - ip: "{{.host.metadata.bootif}}:dhcp"
