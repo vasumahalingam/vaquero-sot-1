@@ -1,4 +1,4 @@
-# Kickstart file for a basic install.   
+# Kickstart file for a basic install
 install
 
 # Specifies the language
