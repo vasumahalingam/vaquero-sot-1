@@ -1,4 +1,4 @@
-# Kickstart file for a basic install!!
+# Kickstart file for a basic install
 install
 
 # Specifies the language
@@ -26,6 +26,8 @@ firewall --enabled --port=22:tcp
 
 # Setup security and SELinux levels
 authconfig --enableshadow --enablemd5
+
+#selinx config
 selinux --permissive
 
 # Set the timezone
