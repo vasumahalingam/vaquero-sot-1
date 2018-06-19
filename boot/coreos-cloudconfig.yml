@@ -1,0 +1,28 @@
+---
+id: coreos-cloudconfig
+name: CoreOS host
+
+operating_system: coreos-1053.2.0-stable
+
+unattended:
+  type: cloud-config
+  use: coreos.yml
+
+metadata:
+  root_pass: $1$De/uvwHY$77ZDxv9lNwZJbwFziq4Ix0
+
+before_shutdown:
+  - image: busybox
+    pull: yes
+    commands:
+      - /bin/ls
+    retry: 0
+    timeout: 60
+
+validate:
+  - image: busybox
+    pull: yes
+    commands:
+      - "[ -e /etc ]"
+    retry: 0
+    timeout: 60

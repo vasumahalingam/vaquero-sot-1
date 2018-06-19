@@ -1,0 +1,132 @@
+name: all-policies
+network_policies:
+# for mercury combo
+    samx:
+      name: samx
+      segments:  [ storage,  api,  management, provision ]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      mtu_size:  1500
+      link_speed:  1gb
+      order:  0
+    pet:
+      name:     pet
+      segments:  [ provider,  external,  tenant]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      mtu_size:  9000
+      link_speed:  10gb
+      order: 1
+
+# for mercury separate
+    management:
+      name:  management
+      segments:   [ management ]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      redundancy:   cross_card
+      Order: 0
+    api:
+      name:     api
+      segments:  [ api ]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      redundancy:   cross_card
+      mtu_size:  9000
+      link_speed:  10gb
+      Order: 1
+    storage:
+      name:     storage
+      segments:  [ storage ]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      redundancy:   cross_card
+      mtu_size:  9000
+      link_speed:  10gb
+      Order: 2
+    sriov:
+      name:   sriov
+      segments: [ sriov ]
+      hardware:  [ Intel/XL710, Intel/X710, Intel/X520 ]
+      link_speed:  10gb
+      order: 99
+      sriovconfig:
+          num_ports:   2
+          num_vfs:     16
+
+# for CCP
+    public:
+      name:     public
+      segments:  [ public ]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      order:  0
+    private:
+      name:     private
+      segments:  [ private ]
+      hardware:  [ Cisco,  Intel ]
+      device:  team:2
+      mtu_size:  9000
+      link_speed:  10gb
+      order:  1
+
+
+#Disk policies
+disk_policies:
+    openstack:
+      name:  openstack
+      virtual_disks:
+        name:  vd0
+        RAID:  RAID1
+        disk:   HDD
+        Size:   800GB+
+      partition:
+        root:
+          mount:  /
+          type:  lvm
+          size:  200GB+
+        home:
+          mount:  /home
+          type:  lvm
+          size:  200GB+
+        app:
+          mount:  /app
+          type:  lvm
+          size:  400GB+
+
+
+#OS policies
+os_policies:
+    sriov-compute:
+        name:  sriov-compute
+        kernel:
+            iommu: pt
+            intel_iommu: on
+            nmi_watchdog: 0
+            elevator: cfq
+        sysctl:
+            net.ipv4.conf.all.rp_filter: 0
+            net.ipv4.conf.default.rp_filter: 0
+            net.ipv6.conf.all.disable_ipv6: 0
+
+
+    huge-pages-1g:
+        name:  huge-pages-1g
+        kernel:
+            hugepagesz: 1G
+            hugepages:  64
+
+
+    nvidia-gpu:
+        name:  nvidia-gpu
+        kernel:
+            rd.driver.blacklist: nouveau
+            nouveau.modeset: 0
+        packages:
+          - kernel-devel
+        post_commands:
+          -  'echo "blacklist nouveau" >> /etc/modprobe.d/blacklist.conf'
+          -  'mv /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r)-nouveau.img'
+          -  'dracut /boot/initramfs-$(uname -r).img $(uname -r) --force'
+          -  'systemctl disable gdm'
+          -  'NVIDIA-Linux-x86_64-352.30.run'
