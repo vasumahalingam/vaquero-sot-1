@@ -29,7 +29,7 @@ authconfig --enableshadow --enablemd5
 selinux --permissive
 
 # Set the timezone
-timezone --utc America/New_York
+timezone --utc UTC
 
 # Wipe all partitions and build them with the info below
 clearpart --all --drives=sda --initlabel
