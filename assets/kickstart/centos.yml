@@ -19,7 +19,7 @@ skipx
 # Used with an HTTP install to specify where the install files are located
 url --url http://128.200.84.11/centos/7/os/x86_64/
 
-rootpw "cisco123"
+rootpw "cisco"
 
 # Enable the firewall and open port 22 for SSH remote administration
 firewall --enabled --port=22:tcp
