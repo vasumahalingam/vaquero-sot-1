@@ -2,11 +2,6 @@
 #  type: local
 #  url: "/vaquero/secret/examples"
 #  token: "fc45162f4f493fe9b8a15e32659d77723f6c8bf3"
-config:
-  type: git
-  url: "https://github.com/fezhou2/vaquero-sot"
-  ref: "test1"
-  token: 57KR1LzfwSoUzKjBDZxjx_4PLAGYyi6MWaStDYQz292
 ---
 name: sm-node0
 interfaces:
